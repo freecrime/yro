@@ -226,18 +226,59 @@
         }
         .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        .status-dot {
+        /* status indicator: a solid "cutout" ring sitting on the avatar edge,
+           with the actual status shape centered inside it — matches Discord's
+           real construction instead of a plain bordered dot */
+        .status-ring {
             position: absolute;
-            bottom: 1px; right: 1px;
-            width: 11px; height: 11px;
-            background: #22c55e;
+            bottom: -2px; right: -2px;
+            width: 19px; height: 19px;
+            background: #0a0a0d;
             border-radius: 50%;
-            border: 2px solid #060608;
-            animation: status-pulse 3s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            overflow: hidden;
         }
-        @keyframes status-pulse {
-            0%, 100% { box-shadow: 0 0 5px rgba(34,197,94,.7); }
-            50%       { box-shadow: 0 0 12px rgba(34,197,94,.95), 0 0 22px rgba(34,197,94,.25); }
+        .status-dot {
+            position: relative;
+            width: 13px; height: 13px;
+            border-radius: 50%;
+            background: #23a55a;
+            box-sizing: border-box;
+            transition: background-color .3s ease, border-color .3s ease;
+        }
+        /* online — solid dot, discord green */
+        .status-dot.status-online { background: #23a55a; }
+
+        /* idle — yellow dot with a bite taken out, like a crescent moon */
+        .status-dot.status-idle { background: #f0b232; }
+        .status-dot.status-idle::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px;
+            width: 13px; height: 13px;
+            border-radius: 50%;
+            background: #0a0a0d;
+        }
+
+        /* dnd — red dot with a short horizontal bar cut out */
+        .status-dot.status-dnd { background: #f23f43; }
+        .status-dot.status-dnd::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6.5px; height: 2.4px;
+            border-radius: 1px;
+            background: #0a0a0d;
+        }
+
+        /* offline — hollow grey ring */
+        .status-dot.status-offline {
+            background: transparent;
+            border: 2px solid #80848e;
         }
 
         .profile-info { flex: 1; min-width: 0; }
@@ -385,6 +426,52 @@
             color: #2c2c3e;
             margin-bottom: 9px;
         }
+
+        /* ── achievements ── */
+        .achievements { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .ach {
+            position: relative;
+            display: flex; align-items: center; gap: 5px;
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 7px;
+            padding: 3px 8px 3px 4px;
+            transition: all .22s ease;
+            cursor: none;
+        }
+        .ach:hover {
+            background: var(--accent-dim);
+            border-color: rgba(255,255,255,.3);
+        }
+        .ach img {
+            width: 16px; height: 16px;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 0 3px rgba(255,255,255,0.15));
+        }
+        .ach-name {
+            font-size: 10px;
+            color: #4a4a62;
+            letter-spacing: 0.2px;
+            transition: color .22s ease;
+        }
+        .ach:hover .ach-name { color: rgba(255,255,255,.88); }
+        .ach::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: -30px; left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background: rgba(4,4,8,.97);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 5px;
+            padding: 4px 9px;
+            font-size: 9px; line-height: 1.3; color: rgba(255,255,255,.8);
+            white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: opacity .2s ease, transform .2s ease;
+            z-index: 30;
+        }
+        .ach:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* ── services ── */
         .services { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -587,7 +674,9 @@
                 <div class="avatar">
                     <img src="https://github.com/freecrime/yro/releases/download/1/pfp.png" alt="yro">
                 </div>
-                <div class="status-dot"></div>
+                <div class="status-ring">
+                    <div class="status-dot status-online" id="statusDot"></div>
+                </div>
             </div>
             <div class="profile-info">
                 <div class="name-wrap">
@@ -626,16 +715,34 @@
 
         <div class="stats">
             <div class="stat-card">
-                <div class="stat-value">51</div>
+                <div class="stat-value">50+</div>
                 <div class="stat-label">PMC Lvl</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">16.0</div>
+                <div class="stat-value">10+</div>
                 <div class="stat-label">K/D</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">92%</div>
+                <div class="stat-value">90%+</div>
                 <div class="stat-label">Survival</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="label">achievements</div>
+        <div class="achievements">
+            <div class="ach" data-tip="Eliminate Killa 100 times while playing as a PMC">
+                <img src="https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/a/ab/Master_of_ULTRA_Achievement_Icon.png/revision/latest/scale-to-width-down/79?cb=20240102011559" alt="Master of ULTRA">
+                <span class="ach-name">Master of ULTRA</span>
+            </div>
+            <div class="ach" data-tip="Eliminate every Boss without dying while playing as a PMC">
+                <img src="https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/7/79/Snowball_Achievement_Icon.png/revision/latest?cb=20240102011134" alt="Snowball">
+                <span class="ach-name">Snowball</span>
+            </div>
+            <div class="ach" data-tip="Neutralize 60 members of The Wedge's squad while playing as a PMC">
+                <img src="https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/e/e6/Who_Dares_Wins_Achievement_Icon.png/revision/latest/scale-to-width-down/79?cb=20260525151639" alt="Who Dares Wins">
+                <span class="ach-name">Who Dares Wins</span>
             </div>
         </div>
 
@@ -643,7 +750,7 @@
 
         <div class="label">pve carry services</div>
         <div class="services">
-            <span class="svc" data-tip="Full Labs clears — every keycard room included">Labs Runs</span>
+            <span class="svc" data-tip="Full Labs clears — every keycard room included">The Lab</span>
             <span class="svc" data-tip="Guided Labyrinth runs for quest completion">Labyrinth</span>
             <span class="svc" data-tip="Icebreaker runs for loot & quest progress">Icebreaker</span>
             <span class="svc" data-tip="We carry & guide you through any raid">Sherpa Runs</span>
@@ -712,7 +819,7 @@
         })();
 
         /* cursor hover feedback on interactive elements */
-        const hoverSelector = 'a, .badge, .svc, .vol-btn, .uid, .stat-card, input[type=range]';
+        const hoverSelector = 'a, .badge, .svc, .ach, .vol-btn, .uid, .stat-card, input[type=range]';
         document.addEventListener('mouseover', e => {
             if (e.target.closest(hoverSelector)) ring.classList.add('hover');
         });
@@ -721,6 +828,37 @@
                 ring.classList.remove('hover');
             }
         });
+
+        /* ── discord presence (lanyard) ── */
+        const DISCORD_ID = '946048505854689340';
+        const statusDot  = document.getElementById('statusDot');
+
+        const STATUS_MAP = {
+            online:  { label: 'Online' },
+            idle:    { label: 'Idle' },
+            dnd:     { label: 'Do Not Disturb' },
+            offline: { label: 'Offline' }
+        };
+
+        function applyStatus(status) {
+            const key = STATUS_MAP[status] ? status : 'offline';
+            statusDot.classList.remove('status-online', 'status-idle', 'status-dnd', 'status-offline');
+            statusDot.classList.add('status-' + key);
+            statusDot.title = STATUS_MAP[key].label;
+        }
+
+        async function fetchDiscordStatus() {
+            try {
+                const res  = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+                const json = await res.json();
+                if (json.success) applyStatus(json.data.discord_status);
+            } catch (e) {
+                /* leave last known status on failure */
+            }
+        }
+
+        fetchDiscordStatus();
+        setInterval(fetchDiscordStatus, 15000);
 
         /* ── live clock ── */
         const clockEl = document.getElementById('overlayClock');
